@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Page Title</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+  <div class="board" id="app">
+    <div class="board__score">
+      <div class="team" v-for="team in teams">
+        <div class="team__score-bar" v-bind:style=[teamPercentage(team.id)]></div>
+        <div class="team__name">{{ team.name }}</div>
+        <!-- <div class="team__score">{{ team.score }}</div> -->
+      </div>
+    </div>
+    <!-- /board-score -->
+    <div class="board__action">
+      <div class="terminal">
+        <h2 class="terminal__name">Terminal I</h2>
+        <h3 
+          v-if="terminalById(1).team !== null"
+          class="terminal__team-label">Equipe <span class="terminal__team-name"> {{ teamFromTerminal(1).name }}</span></h3>
+        <div 
+          v-if="terminalById(1).team !== null"
+          class="terminal__display">
+          <div class="terminal__input">
+            {{ terminalById(1).pass }}    
+          </div> 
+          <button 
+              v-on:click="setToFree(1)"
+              class="btn btn--primary mt-3">Liberar</button>
+        </div>
+        <div 
+          v-if="!terminalById(1).team && !terminalById(1).waiting"
+          class="terminal__display">
+          <div class="terminal__state">
+            LIVRE
+          </div>
+          <button 
+            v-on:click="setToWating(1)"
+            class="btn btn--primary mt-3">Reservar</button>
+        </div>
+        <div 
+          v-if="terminalById(1).waiting"
+          class="terminal__display">
+          <div class="terminal__state">
+            SELECIONAR EQUIPE
+          </div>
+          <button 
+            v-on:click="setToFree(1)"
+            class="btn btn--primary mt-3">Liberar</button>
+        </div>
+      </div>
+      <div class="timer">
+        <div class="timer__time-left">
+          {{ toTimeString() }}
+        </div>
+        <button 
+          v-if="!started"
+          v-on:click="start()"
+          class="btn btn--primary mt-3">Iniciar</button>
+      </div>
+      <div class="terminal">
+        <h2 class="terminal__name">Terminal II</h2>
+        <h3 
+          v-if="terminalById(2).team !== null"
+          class="terminal__team-label">Equipe <span class="terminal__team-name"> {{ teamFromTerminal(2).name }}</span></h3>
+        <div 
+          v-if="terminalById(2).team !== null"
+          class="terminal__display">
+          <div class="terminal__input">
+            {{ terminalById(2).pass }}
+          </div> 
+          <button 
+              v-on:click="setToFree(2)"
+              class="btn btn--primary mt-3">Liberar</button>
+        </div>
+        <div 
+          v-if="!terminalById(2).team && !terminalById(2).waiting"
+          class="terminal__display">
+          <div class="terminal__state">
+            LIVRE
+          </div>
+          <button 
+            v-on:click="setToWating(2)"
+            class="btn btn--primary mt-3">Reservar</button>
+        </div>
+        <div 
+          v-if="terminalById(2).waiting"
+          class="terminal__display">
+          <div class="terminal__state">
+            SELECIONAR EQUIPE
+          </div>
+          <button 
+            v-on:click="setToFree(2)"
+            class="btn btn--primary mt-3">Liberar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+      var socket = io();
+      socket.on('write', function(data) {
+        if (!app.$data.started) {
+          console.log("not started...");
+          return;
+        }
+        if (app.$data.time_left <= 0) {
+          console.log("Finished...");
+          return;
+        }
+        const {terminal, letter} = data;
+        const appTerminal = app.terminalById(terminal);
+        if (appTerminal.waiting) {
+          app.reserveTerminal(letter, terminal);
+          return;
+        }
+        if (appTerminal.team !== null) {
+          app.writeLetter(letter, terminal);
+          return;
+        }
+      });
+      socket.on('erase', function(data) {
+        app.eraseLetter(data.terminal);
+      });
+  </script>
+  <script src="main.js"></script>
+</body>
+</html>
