@@ -56,6 +56,6 @@ while True:
   terminal_b_letter = int((dialer_02.value * 1023)/39.49)
   writeNumber(terminal_a_letter + 100);
   writeNumber(terminal_b_letter + 200);
-  time.sleep(.25)
+  time.sleep(.15)
 
 pause()
